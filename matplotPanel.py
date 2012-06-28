@@ -8,29 +8,34 @@ http://d.hatena.ne.jp/white_wheels/20100327/p5
 
 import wx
 import matplotlib
+matplotlib.interactive(True)
+matplotlib.use('WXAgg') # must load once and called before import backend_wxagg
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
 
 class matplotPanel(wx.Panel):
   def __init__(self, drawfunc, parent, id, *args, **kwargs):
-    matplotlib.interactive(True)
-    matplotlib.use('WXAgg') # called before import backend_wxagg
-    from matplotlib.figure import Figure
-    from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
     super(matplotPanel, self).__init__(parent, id, *args, **kwargs)
     self.drawfunc = drawfunc
     self.parent = parent
-    self.figure = Figure(None)
-    self.canvas = FigureCanvasWxAgg(self, wx.NewId(), self.figure)
-    self._SetSize()
+    self.Bind(wx.EVT_SIZE, self.OnSize)
     self.Bind(wx.EVT_PAINT, self.OnPaint)
 
   def _SetSize(self):
-    size = tuple(self.parent.GetClientSize())
-    self.SetSize(size)
+    # size = tuple(self.parent.GetClientSize())
+    size = tuple(self.GetClientSize())
+    # self.SetSize(size)
+    self.figure = Figure(None)
+    self.canvas = FigureCanvasWxAgg(self, wx.NewId(), self.figure)
     self.canvas.SetSize(size)
     dpi = self.figure.get_dpi()
     self.figure.set_size_inches(float(size[0]) / dpi, float(size[1]) / dpi)
 
+  def OnSize(self, ev):
+    self.Refresh()
+
   def OnPaint(self, ev):
+    self._SetSize()
     dc = wx.PaintDC(self) # don't delete this line
     self.drawfunc(self)
 
