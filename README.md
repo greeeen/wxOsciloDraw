@@ -1,7 +1,9 @@
 # wxOsciloDraw
+
 ## Sites
 * http://greeeen.github.com/wxOsciloDraw/ (home page)
 * https://github.com/greeeen/wxOsciloDraw/ (GIT repository)
+
 ## Required
 python and well known modules:
 
