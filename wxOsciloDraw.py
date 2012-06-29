@@ -60,8 +60,8 @@ def load_turtle(fname):
     qa, qx, qy = getnextpoint(p, qa, qx, qy)
     x.append(qx), y.append(qy)
   x.append(x[0]), y.append(y[0])
-  ax, ay = np.array(x, int), np.array(y, int)
-  return t, ax * .9 / np.max(np.abs(ax)), ay * .9 / np.max(np.abs(ay))
+  at, ax, ay = np.array(t, float), np.array(x, int), np.array(y, int)
+  return at, ax * .9 / np.max(np.abs(ax)), ay * .9 / np.max(np.abs(ay))
 
 def load_dft(fname):
   if False: # test return preset value
@@ -119,9 +119,11 @@ class MyFrame(wx.Frame):
 
     autoscale = True # False のときは下行の各値を gauge で set
     x_min, x_max, y_min, y_max = DEF_X_MIN, DEF_X_MAX, DEF_Y_MIN, DEF_Y_MAX
-    usefft = True
+    usefft = False # True
     if not usefft:
       t, x, y = load_turtle(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_EXT)))
+      #x = np.interp(np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK), t, x)
+      #y = np.interp(np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK), t, y)
     else:
       t, x, y = load_dft(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_DFT)))
     f = len(t) # 100.0
@@ -137,12 +139,13 @@ class MyFrame(wx.Frame):
       self.figure.set_facecolor(DEF_BGCOLOR_R[0])
       self.canvas.SetBackgroundColour(DEF_BGCOLOR_R[1])
       pfft = self.figure.add_subplot(121)
-      pfft.plot(F, YA, 'ro', markersize=3) # red dot
+      pfft.plot(F, YA, 'ro', markersize=2) # red dot
       #pfft.set_xscale('log')
       pfft.set_yscale('log')
       pfft.axis([0, f / 2, 0, 100])
       plt = self.figure.add_subplot(122)
-      plt.plot(t, y)
+      if not usefft: plt.plot(t, y, 'ro', markersize=2) # red dot
+      else: plt.plot(t, y)
       plt.set_xlabel('t')
       plt.set_ylabel('y')
       if not autoscale: plt.axis([DEF_T_MIN, DEF_T_MAX, y_min, y_max])
@@ -171,12 +174,13 @@ class MyFrame(wx.Frame):
       self.figure.set_facecolor(DEF_BGCOLOR_B[0])
       self.canvas.SetBackgroundColour(DEF_BGCOLOR_B[1])
       pfft = self.figure.add_subplot(212)
-      pfft.plot(XA, F, 'bo', markersize=3) # blue dot
+      pfft.plot(XA, F, 'bo', markersize=2) # blue dot
       pfft.set_xscale('log')
       #pfft.set_yscale('log')
       pfft.axis([0, 100, 0, f / 2])
       plt = self.figure.add_subplot(211)
-      plt.plot(x, t)
+      if not usefft: plt.plot(x, t, 'bo', markersize=2) # blue dot
+      else: plt.plot(x, t)
       plt.set_xlabel('x')
       plt.set_ylabel('t')
       if not autoscale: plt.axis([x_min, x_max, DEF_T_MIN, DEF_T_MAX])
