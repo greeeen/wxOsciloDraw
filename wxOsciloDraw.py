@@ -64,7 +64,10 @@ class MyFrame(wx.Frame):
       y = reduce(lambda a, b: a + np.cos(b*t), xrange(1, 65), 0.0)
     else:
       o = loaddata(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_EXT)))
-      t = [1000.0 * (float(n) / len(o)) for n in xrange(len(o))] # (+ 1 原点含)
+      # (原点を含めるときは xrange(len(o) + 2) として x, y = [0], [0] で初期化)
+      # t = [(1000.0 * float(n) / len(o)) for n in xrange(len(o) + 1)] # 正規化
+      t = [(2.0 * math.pi * float(n) / len(o) - math.pi) \
+        for n in xrange(len(o) + 1)] # -π ～ +π で正規化
       x = [] # ([0] 原点含)
       y = [] # ([0] 原点含)
       qa, qx, qy = 0.0, 0, 0
@@ -72,6 +75,8 @@ class MyFrame(wx.Frame):
         qa, qx, qy = getnextpoint(p, qa, qx, qy)
         x.append(qx)
         y.append(qy)
+      x.append(x[0])
+      y.append(y[0])
 
     def drawY(self):
       self.figure.set_facecolor(DEF_BGCOLOR_R[0])
