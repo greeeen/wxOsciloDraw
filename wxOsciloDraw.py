@@ -14,6 +14,7 @@ import numpy as np
 APP_TITLE = u'wxOsciloDraw'
 APP_FILE = u'testdata'
 APP_EXT = u'turtle'
+APP_DFT = u'dft'
 
 DEF_TWIDTH, DEF_T_MIN, DEF_T_MAX, DEF_T_TICK = 400, -math.pi, math.pi, 0.001
 DEF_XWIDTH, DEF_X_MIN, DEF_X_MAX = 200, -2.0, 2.0
@@ -47,6 +48,24 @@ def getnextpoint(p, qa, qx, qy):
   ra = pa * math.pi / 180.0
   return (pa, int(qx + p[2] * math.cos(ra)), int(qy + p[2] * math.sin(ra)))
 
+def load_dft(fname):
+  F = []
+  X = []
+  Y = []
+  return F, X, Y
+
+def save_dft(fname, F, X, Y):
+  try:
+    ofp = open(fname, 'wb')
+    for i in xrange(len(F)):
+      if F[i] >= 0.0:
+        ofp.write('%f %f %f %f %f\n' % (
+          F[i], X[i].real, X[i].imag, Y[i].real, Y[i].imag))
+  except (IOError,), e:
+    wx.MessageBox(u'file write error: %s' % fname, APP_TITLE, wx.OK)
+  finally:
+    if ofp: ofp.close()
+
 class MyFrame(wx.Frame):
   def __init__(self, *args, **kwargs):
     super(MyFrame, self).__init__(title=APP_TITLE,
@@ -57,11 +76,17 @@ class MyFrame(wx.Frame):
 
     autoscale = True # False のときは下行の各値を gauge で set
     x_min, x_max, y_min, y_max = DEF_X_MIN, DEF_X_MAX, DEF_Y_MIN, DEF_Y_MAX
-    usefft = False # True
+    usefft = True # False # True
     if usefft:
-      t = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK)
-      x = reduce(lambda a, b: a + np.sin(b*t)/b, xrange(1, 65), 0.0)
-      y = reduce(lambda a, b: a + np.cos(b*t), xrange(1, 65), 0.0)
+      F, X, Y = load_dft(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_DFT)))
+      if False: # test
+        t = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK)
+        x = reduce(lambda a, b: a + np.sin(b*t)/b, xrange(1, 65), 0.0)
+        y = reduce(lambda a, b: a + np.cos(b*t), xrange(1, 65), 0.0)
+      else:
+        t = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK)
+        x = reduce(lambda a, b: a + np.sin(b*t)/b, xrange(1, 65), 0.0)
+        y = reduce(lambda a, b: a + np.cos(b*t), xrange(1, 65), 0.0)
     else:
       o = loaddata(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_EXT)))
       # (原点を含めるときは xrange(len(o) + 2) として x, y = [0], [0] で初期化)
@@ -77,11 +102,24 @@ class MyFrame(wx.Frame):
         y.append(qy)
       x.append(x[0])
       y.append(y[0])
+    f = len(t) # 100.0
+    F = np.fft.fftfreq(len(t), 1.0 / f) # t[1] - t[0])
+    X = np.fft.fft(x)
+    Y = np.fft.fft(y)
+    XA = np.sqrt(X.real ** 2 + X.imag ** 2)
+    YA = np.sqrt(Y.real ** 2 + Y.imag ** 2)
+    if not usefft:
+      save_dft(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_DFT)), F, X, Y)
 
     def drawY(self):
       self.figure.set_facecolor(DEF_BGCOLOR_R[0])
       self.canvas.SetBackgroundColour(DEF_BGCOLOR_R[1])
-      plt = self.figure.add_subplot(111)
+      pfft = self.figure.add_subplot(121)
+      pfft.plot(F, YA, 'ro', markersize=3) # red dot
+      #pfft.set_xscale('log')
+      pfft.set_yscale('log')
+      pfft.axis([0, f / 2, 0, 10000])
+      plt = self.figure.add_subplot(122)
       plt.plot(t, y)
       plt.set_xlabel('t')
       plt.set_ylabel('y')
@@ -110,7 +148,12 @@ class MyFrame(wx.Frame):
     def drawX(self):
       self.figure.set_facecolor(DEF_BGCOLOR_B[0])
       self.canvas.SetBackgroundColour(DEF_BGCOLOR_B[1])
-      plt = self.figure.add_subplot(111)
+      pfft = self.figure.add_subplot(212)
+      pfft.plot(XA, F, 'bo', markersize=3) # blue dot
+      pfft.set_xscale('log')
+      #pfft.set_yscale('log')
+      pfft.axis([0, 10000, 0, f / 2])
+      plt = self.figure.add_subplot(211)
       plt.plot(x, t)
       plt.set_xlabel('x')
       plt.set_ylabel('t')
