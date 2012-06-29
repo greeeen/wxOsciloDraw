@@ -15,22 +15,12 @@ APP_TITLE = u'wxOsciloDraw'
 APP_FILE = u'testdata'
 APP_EXT = u'turtle'
 
-DEF_T_MIN = -math.pi
-DEF_T_MAX = math.pi
-DEF_T_TICK = 0.001
-DEF_TWIDTH = 400
-DEF_X_MIN = -2.0
-DEF_X_MAX = 2.0
-DEF_XWIDTH = 200
-DEF_YWIDTH = 200
-DEF_Y_MIN = -2.0
-DEF_Y_MAX = 2.0
-DEF_FACOLOR_R = (1.0, 0.7, 0.7)
-DEF_FACOLOR_G = (0.7, 1.0, 0.7)
-DEF_FACOLOR_B = (0.7, 0.7, 1.0)
-DEF_BGCOLOR_R = wx.Color(255, 100, 100)
-DEF_BGCOLOR_G = wx.Color(100, 255, 100)
-DEF_BGCOLOR_B = wx.Color(100, 100, 255)
+DEF_TWIDTH, DEF_T_MIN, DEF_T_MAX, DEF_T_TICK = 400, -math.pi, math.pi, 0.001
+DEF_XWIDTH, DEF_X_MIN, DEF_X_MAX = 200, -2.0, 2.0
+DEF_YWIDTH, DEF_Y_MIN, DEF_Y_MAX = 200, -2.0, 2.0
+DEF_BGCOLOR_R = ((1.0, 0.7, 0.7), wx.Color(255, 100, 100))
+DEF_BGCOLOR_G = ((0.7, 1.0, 0.7), wx.Color(100, 255, 100))
+DEF_BGCOLOR_B = ((0.7, 0.7, 1.0), wx.Color(100, 100, 255))
 
 def loaddata(fname):
   orbit = []
@@ -84,8 +74,8 @@ class MyFrame(wx.Frame):
         y.append(qy)
 
     def drawY(self):
-      self.figure.set_facecolor(DEF_FACOLOR_R)
-      self.canvas.SetBackgroundColour(DEF_BGCOLOR_R)
+      self.figure.set_facecolor(DEF_BGCOLOR_R[0])
+      self.canvas.SetBackgroundColour(DEF_BGCOLOR_R[1])
       plt = self.figure.add_subplot(111)
       plt.plot(t, y)
       plt.set_xlabel('t')
@@ -96,8 +86,8 @@ class MyFrame(wx.Frame):
     self.mppY.SetSizerProps(expand=True, proportion=1)
 
     def drawXY(self):
-      self.figure.set_facecolor(DEF_FACOLOR_G)
-      self.canvas.SetBackgroundColour(DEF_BGCOLOR_G)
+      self.figure.set_facecolor(DEF_BGCOLOR_G[0])
+      self.canvas.SetBackgroundColour(DEF_BGCOLOR_G[1])
       plt = self.figure.add_subplot(111)
       plt.plot(x, y)
       plt.set_xlabel('x')
@@ -113,8 +103,8 @@ class MyFrame(wx.Frame):
     self.ctl.SetSizerProps(expand=True, proportion=1)
 
     def drawX(self):
-      self.figure.set_facecolor(DEF_FACOLOR_B)
-      self.canvas.SetBackgroundColour(DEF_BGCOLOR_B)
+      self.figure.set_facecolor(DEF_BGCOLOR_B[0])
+      self.canvas.SetBackgroundColour(DEF_BGCOLOR_B[1])
       plt = self.figure.add_subplot(111)
       plt.plot(x, t)
       plt.set_xlabel('x')
