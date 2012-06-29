@@ -54,30 +54,47 @@ def load_turtle(fname):
   # t = [(1000.0 * float(n) / len(o)) for n in xrange(len(o) + 1)] # 正規化
   t = [(2.0 * math.pi * float(n) / len(o) - math.pi) \
     for n in xrange(len(o) + 1)] # -π ～ +π で正規化
-  x = [] # ([0] 原点含)
-  y = [] # ([0] 原点含)
+  x, y = [], [] # ([0], [0] 原点含)
   qa, qx, qy = 0.0, 0, 0
   for p in o:
     qa, qx, qy = getnextpoint(p, qa, qx, qy)
-    x.append(qx)
-    y.append(qy)
-  x.append(x[0])
-  y.append(y[0])
-  ax = np.array(x, int)
-  ay = np.array(y, int)
+    x.append(qx), y.append(qy)
+  x.append(x[0]), y.append(y[0])
+  ax, ay = np.array(x, int), np.array(y, int)
   return t, ax * .9 / np.max(np.abs(ax)), ay * .9 / np.max(np.abs(ay))
 
 def load_dft(fname):
-  if True: # False: # test
+  if False: # test return preset value
     t = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK)
     x = reduce(lambda a, b: a + np.sin(b*t)/b, xrange(1, 65), 0.0)
     y = reduce(lambda a, b: a + np.cos(b*t), xrange(1, 65), 0.0)
     x *= .9 / np.max(np.abs(x))
     y *= .9 / np.max(np.abs(y))
+    return t, x, y
+  t, x, y, o = [], [], [], []
+  if not os.path.exists(fname):
+    wx.MessageBox(u'file is not found: %s' % fname, APP_TITLE, wx.OK)
   else:
-    t = []
-    x = []
-    y = []
+    try:
+      ifp = open(fname, 'rb')
+      c = 0
+      for line in ifp.readlines():
+        c += 1
+        p = map(float, line.rstrip().lstrip().split())
+        o.append((c - 1, p[0], p[1], p[2], p[3]))
+    except (IOError,), e:
+      wx.MessageBox(u'file read error: %s' % fname, APP_TITLE, wx.OK)
+    except (IndexError, ValueError), e:
+      wx.MessageBox(u'bad data in [%s] line %d' % (fname, c), APP_TITLE, wx.OK)
+    finally:
+      if ifp: ifp.close()
+  t = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK)
+  x = reduce(lambda a, b: \
+    a + o[b][1] * np.cos(b * t) + o[b][2] * np.sin(b * t), xrange(len(o)), 0.0)
+  y = reduce(lambda a, b: \
+    a + o[b][3] * np.cos(b * t) + o[b][4] * np.sin(b * t), xrange(len(o)), 0.0)
+  x *= .9 / np.max(np.abs(x))
+  y *= .9 / np.max(np.abs(y))
   return t, x, y
 
 def save_dft(fname, F, X, Y):
@@ -102,7 +119,7 @@ class MyFrame(wx.Frame):
 
     autoscale = True # False のときは下行の各値を gauge で set
     x_min, x_max, y_min, y_max = DEF_X_MIN, DEF_X_MAX, DEF_Y_MIN, DEF_Y_MAX
-    usefft = True # False # True
+    usefft = False # True
     if not usefft:
       t, x, y = load_turtle(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_EXT)))
     else:
