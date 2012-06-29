@@ -48,19 +48,45 @@ def getnextpoint(p, qa, qx, qy):
   ra = pa * math.pi / 180.0
   return (pa, int(qx + p[2] * math.cos(ra)), int(qy + p[2] * math.sin(ra)))
 
+def load_turtle(fname):
+  o = loaddata(fname)
+  # (原点を含めるときは xrange(len(o) + 2) として x, y = [0], [0] で初期化)
+  # t = [(1000.0 * float(n) / len(o)) for n in xrange(len(o) + 1)] # 正規化
+  t = [(2.0 * math.pi * float(n) / len(o) - math.pi) \
+    for n in xrange(len(o) + 1)] # -π ～ +π で正規化
+  x = [] # ([0] 原点含)
+  y = [] # ([0] 原点含)
+  qa, qx, qy = 0.0, 0, 0
+  for p in o:
+    qa, qx, qy = getnextpoint(p, qa, qx, qy)
+    x.append(qx)
+    y.append(qy)
+  x.append(x[0])
+  y.append(y[0])
+  ax = np.array(x, int)
+  ay = np.array(y, int)
+  return t, ax * .9 / np.max(np.abs(ax)), ay * .9 / np.max(np.abs(ay))
+
 def load_dft(fname):
-  F = []
-  X = []
-  Y = []
-  return F, X, Y
+  if True: # False: # test
+    t = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK)
+    x = reduce(lambda a, b: a + np.sin(b*t)/b, xrange(1, 65), 0.0)
+    y = reduce(lambda a, b: a + np.cos(b*t), xrange(1, 65), 0.0)
+    x *= .9 / np.max(np.abs(x))
+    y *= .9 / np.max(np.abs(y))
+  else:
+    t = []
+    x = []
+    y = []
+  return t, x, y
 
 def save_dft(fname, F, X, Y):
   try:
     ofp = open(fname, 'wb')
     for i in xrange(len(F)):
       if F[i] >= 0.0:
-        ofp.write('%f %f %f %f %f\n' % (
-          F[i], X[i].real, X[i].imag, Y[i].real, Y[i].imag))
+        ofp.write('%f %f %f %f\n' % (
+          X[i].real, X[i].imag, Y[i].real, Y[i].imag))
   except (IOError,), e:
     wx.MessageBox(u'file write error: %s' % fname, APP_TITLE, wx.OK)
   finally:
@@ -77,31 +103,10 @@ class MyFrame(wx.Frame):
     autoscale = True # False のときは下行の各値を gauge で set
     x_min, x_max, y_min, y_max = DEF_X_MIN, DEF_X_MAX, DEF_Y_MIN, DEF_Y_MAX
     usefft = True # False # True
-    if usefft:
-      F, X, Y = load_dft(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_DFT)))
-      if False: # test
-        t = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK)
-        x = reduce(lambda a, b: a + np.sin(b*t)/b, xrange(1, 65), 0.0)
-        y = reduce(lambda a, b: a + np.cos(b*t), xrange(1, 65), 0.0)
-      else:
-        t = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK)
-        x = reduce(lambda a, b: a + np.sin(b*t)/b, xrange(1, 65), 0.0)
-        y = reduce(lambda a, b: a + np.cos(b*t), xrange(1, 65), 0.0)
+    if not usefft:
+      t, x, y = load_turtle(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_EXT)))
     else:
-      o = loaddata(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_EXT)))
-      # (原点を含めるときは xrange(len(o) + 2) として x, y = [0], [0] で初期化)
-      # t = [(1000.0 * float(n) / len(o)) for n in xrange(len(o) + 1)] # 正規化
-      t = [(2.0 * math.pi * float(n) / len(o) - math.pi) \
-        for n in xrange(len(o) + 1)] # -π ～ +π で正規化
-      x = [] # ([0] 原点含)
-      y = [] # ([0] 原点含)
-      qa, qx, qy = 0.0, 0, 0
-      for p in o:
-        qa, qx, qy = getnextpoint(p, qa, qx, qy)
-        x.append(qx)
-        y.append(qy)
-      x.append(x[0])
-      y.append(y[0])
+      t, x, y = load_dft(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_DFT)))
     f = len(t) # 100.0
     F = np.fft.fftfreq(len(t), 1.0 / f) # t[1] - t[0])
     X = np.fft.fft(x)
@@ -118,7 +123,7 @@ class MyFrame(wx.Frame):
       pfft.plot(F, YA, 'ro', markersize=3) # red dot
       #pfft.set_xscale('log')
       pfft.set_yscale('log')
-      pfft.axis([0, f / 2, 0, 10000])
+      pfft.axis([0, f / 2, 0, 100])
       plt = self.figure.add_subplot(122)
       plt.plot(t, y)
       plt.set_xlabel('t')
@@ -152,7 +157,7 @@ class MyFrame(wx.Frame):
       pfft.plot(XA, F, 'bo', markersize=3) # blue dot
       pfft.set_xscale('log')
       #pfft.set_yscale('log')
-      pfft.axis([0, 10000, 0, f / 2])
+      pfft.axis([0, 100, 0, f / 2])
       plt = self.figure.add_subplot(211)
       plt.plot(x, t)
       plt.set_xlabel('x')
