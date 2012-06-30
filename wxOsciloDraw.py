@@ -16,7 +16,8 @@ APP_FILE = u'testdata'
 APP_EXT = u'turtle'
 APP_DFT = u'dft'
 
-DEF_TWIDTH, DEF_T_MIN, DEF_T_MAX, DEF_T_TICK = 400, -math.pi, math.pi, 0.001
+DEF_T_TICK = 0.01 # 0.1 # 0.05 # 0.025 # 0.0125 # 0.01 # 0.001
+DEF_TWIDTH, DEF_T_MIN, DEF_T_MAX = 400, -math.pi, math.pi
 DEF_XWIDTH, DEF_X_MIN, DEF_X_MAX = 200, -2.0, 2.0
 DEF_YWIDTH, DEF_Y_MIN, DEF_Y_MAX = 200, -2.0, 2.0
 DEF_BGCOLOR_R = ((1.0, 0.7, 0.7), wx.Color(255, 100, 100))
@@ -53,7 +54,7 @@ def load_turtle(fname):
   # (原点を含めるときは xrange(len(o) + 2) として x, y = [0], [0] で初期化)
   # t = [(1000.0 * float(n) / len(o)) for n in xrange(len(o) + 1)] # 正規化
   t = [(2.0 * math.pi * float(n) / len(o) - math.pi) \
-    for n in xrange(len(o) + 1)] # -π ～ +π で正規化
+    for n in xrange(len(o) + 1)] # -π ～ +π で正規化 (interp 準備兼用)
   x, y = [], [] # ([0], [0] 原点含)
   qa, qx, qy = 0.0, 0, 0
   for p in o:
@@ -119,36 +120,40 @@ class MyFrame(wx.Frame):
 
     autoscale = True # False のときは下行の各値を gauge で set
     x_min, x_max, y_min, y_max = DEF_X_MIN, DEF_X_MAX, DEF_Y_MIN, DEF_Y_MAX
-    usefft = False # True
+    usefft = True # False # True
     if not usefft:
       t, x, y = load_turtle(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_EXT)))
-      #x = np.interp(np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK), t, x)
-      #y = np.interp(np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK), t, y)
+      if DEF_T_TICK < 1.0:
+        et = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK) # enhanced scale
+        x, y = np.interp(et, t, x), np.interp(et, t, y)
+        t = et # set new scale after np.interp()
     else:
       t, x, y = load_dft(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_DFT)))
-    f = len(t) # 100.0
-    F = np.fft.fftfreq(len(t), 1.0 / f) # t[1] - t[0])
-    X = np.fft.fft(x)
-    Y = np.fft.fft(y)
+    N = len(t) # number of samples
+    f = N # frequency (now N / 1)
+    F = np.fft.fftfreq(N, 1.0 / f) # (tick = t[1] - t[0])
+    X, Y = np.fft.fft(x), np.fft.fft(y)
     XA = np.sqrt(X.real ** 2 + X.imag ** 2)
     YA = np.sqrt(Y.real ** 2 + Y.imag ** 2)
     if not usefft:
       save_dft(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_DFT)), F, X, Y)
+    # print u'len t: %d, x: %d, y: %d, F: %d, X: %d, Y: %d, XA: %d, YA: %d' % (
+    #   len(t), len(x), len(y), len(F), len(X), len(Y), len(XA), len(YA))
 
     def drawY(self):
       self.figure.set_facecolor(DEF_BGCOLOR_R[0])
       self.canvas.SetBackgroundColour(DEF_BGCOLOR_R[1])
+      plt = self.figure.add_subplot(122)
+      if not usefft: plt.plot(t, y, 'ro', markersize=1) # red dot
+      else: plt.plot(t, y)
+      plt.set_xlabel('t')
+      plt.set_ylabel('y')
+      if not autoscale: plt.axis([DEF_T_MIN, DEF_T_MAX, y_min, y_max])
       pfft = self.figure.add_subplot(121)
       pfft.plot(F, YA, 'ro', markersize=2) # red dot
       #pfft.set_xscale('log')
       pfft.set_yscale('log')
       pfft.axis([0, f / 2, 0, 100])
-      plt = self.figure.add_subplot(122)
-      if not usefft: plt.plot(t, y, 'ro', markersize=2) # red dot
-      else: plt.plot(t, y)
-      plt.set_xlabel('t')
-      plt.set_ylabel('y')
-      if not autoscale: plt.axis([DEF_T_MIN, DEF_T_MAX, y_min, y_max])
     self.mppY = matplotPanel(drawY, self.lpnl, wx.NewId())
     self.mppY.SetMinSize((DEF_TWIDTH, DEF_YWIDTH))
     self.mppY.SetSizerProps(expand=True, proportion=1)
@@ -173,17 +178,17 @@ class MyFrame(wx.Frame):
     def drawX(self):
       self.figure.set_facecolor(DEF_BGCOLOR_B[0])
       self.canvas.SetBackgroundColour(DEF_BGCOLOR_B[1])
+      plt = self.figure.add_subplot(211)
+      if not usefft: plt.plot(x, t, 'bo', markersize=1) # blue dot
+      else: plt.plot(x, t)
+      plt.set_xlabel('x')
+      plt.set_ylabel('t')
+      if not autoscale: plt.axis([x_min, x_max, DEF_T_MIN, DEF_T_MAX])
       pfft = self.figure.add_subplot(212)
       pfft.plot(XA, F, 'bo', markersize=2) # blue dot
       pfft.set_xscale('log')
       #pfft.set_yscale('log')
       pfft.axis([0, 100, 0, f / 2])
-      plt = self.figure.add_subplot(211)
-      if not usefft: plt.plot(x, t, 'bo', markersize=2) # blue dot
-      else: plt.plot(x, t)
-      plt.set_xlabel('x')
-      plt.set_ylabel('t')
-      if not autoscale: plt.axis([x_min, x_max, DEF_T_MIN, DEF_T_MAX])
     self.mppX = matplotPanel(drawX, self.lpnl, wx.NewId())
     self.mppX.SetMinSize((DEF_XWIDTH, DEF_TWIDTH))
     self.mppX.SetSizerProps(expand=True, proportion=1)
