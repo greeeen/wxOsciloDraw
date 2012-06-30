@@ -16,7 +16,11 @@ APP_FILE = u'testdata'
 APP_EXT = u'turtle'
 APP_DFT = u'dft'
 
-DEF_T_TICK = 0.01 # 0.1 # 0.05 # 0.025 # 0.0125 # 0.01 # 0.001
+# DEF_T_TICK 変更時の .dft 出力データサンプル数の目安
+# (usefft を False にすると .turtle データから .dft データに変換)
+# 1.0 のときは .turtle と同数(変換後の共役複素数=負値は保存しないので実質半数)
+# 0.1(32) 0.05(64) 0.025(128) 0.0125(256) 0.01(320) 0.005(640) 0.001(3200)
+DEF_T_TICK = 0.005 # 0.01 でほぼ充分だが test mode (preset) のデータだと粗い為
 DEF_TWIDTH, DEF_T_MIN, DEF_T_MAX = 400, -math.pi, math.pi
 DEF_XWIDTH, DEF_X_MIN, DEF_X_MAX = 200, -2.0, 2.0
 DEF_YWIDTH, DEF_Y_MIN, DEF_Y_MAX = 200, -2.0, 2.0
@@ -65,7 +69,7 @@ def load_turtle(fname):
 
 def load_dft(fname):
   t, x, y, o = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK), [], [], []
-  if True: # False: # test return preset value
+  if False: # test mode return preset value
     x = reduce(lambda a, b: a + np.sin(b*t)/b, xrange(1, 65), 0.0)
     y = reduce(lambda a, b: a + np.cos(b*t), xrange(1, 65), 0.0)
     return t, x, y
@@ -113,7 +117,7 @@ class MyFrame(wx.Frame):
 
     autoscale = True # False のときは下行の各値を gauge で set
     x_min, x_max, y_min, y_max = DEF_X_MIN, DEF_X_MAX, DEF_Y_MIN, DEF_Y_MAX
-    usefft = True # False # True
+    usefft = False # True
     if not usefft:
       t, x, y = load_turtle(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_EXT)))
       if DEF_T_TICK < 1.0: # re-sampling by enhanced scale
