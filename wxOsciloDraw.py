@@ -89,6 +89,11 @@ def load_dft(fname):
       wx.MessageBox(u'bad data in [%s] line %d' % (fname, c), APP_TITLE, wx.OK)
     finally:
       if ifp: ifp.close()
+  # Cn * np.exp(-jwt) 形式でもほぼ同じ波形が得られるが 再 DFT の結果が意味なし
+  # x = reduce(lambda a, b: \
+  #   a + (o[b][1] + 1j * o[b][2]) * np.exp(-1j * b * t), xrange(len(o)), 0.0)
+  # y = reduce(lambda a, b: \
+  #   a + (o[b][3] + 1j * o[b][4]) * np.exp(-1j * b * t), xrange(len(o)), 0.0)
   x = reduce(lambda a, b: \
     a + o[b][1] * np.cos(b * t) + o[b][2] * np.sin(b * t), xrange(len(o)), 0.0)
   y = reduce(lambda a, b: \
@@ -117,7 +122,7 @@ class MyFrame(wx.Frame):
 
     autoscale = True # False のときは下行の各値を gauge で set
     x_min, x_max, y_min, y_max = DEF_X_MIN, DEF_X_MAX, DEF_Y_MIN, DEF_Y_MAX
-    usefft = False # True
+    usefft = True # False # True
     if not usefft:
       t, x, y = load_turtle(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_EXT)))
       if DEF_T_TICK < 1.0: # re-sampling by enhanced scale
