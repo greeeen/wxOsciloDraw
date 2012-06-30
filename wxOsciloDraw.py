@@ -69,7 +69,12 @@ def load_turtle(fname):
     qa, qx, qy = getnextpoint(p, qa, qx, qy)
     x.append(qx), y.append(qy)
   x.append(x[0]), y.append(y[0])
-  return np.array(t, float), np.array(x, int), np.array(y, int)
+  at, ax, ay = np.array(t, float), np.array(x, int), np.array(y, int)
+  if DEF_T_TICK < 1.0: # re-sampling by enhanced scale
+    et = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK) # enhanced scale
+    ax, ay = np.interp(et, at, ax), np.interp(et, at, ay)
+    at = et # set new scale after np.interp()
+  return at, ax, ay
 
 def load_dft(fname):
   t, x, y, o = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK), [], [], []
@@ -127,14 +132,8 @@ class MyFrame(wx.Frame):
     autoscale = True # False のときは下行の各値を gauge で set
     x_min, x_max, y_min, y_max = DEF_X_MIN, DEF_X_MAX, DEF_Y_MIN, DEF_Y_MAX
     usefft = True # False # True
-    if not usefft:
-      t, x, y = load_turtle(fname(APP_EXT))
-      if DEF_T_TICK < 1.0: # re-sampling by enhanced scale
-        et = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK) # enhanced scale
-        x, y = np.interp(et, t, x), np.interp(et, t, y)
-        t = et # set new scale after np.interp()
-    else:
-      t, x, y = load_dft(fname(APP_DFT))
+    if not usefft: t, x, y = load_turtle(fname(APP_EXT))
+    else: t, x, y = load_dft(fname(APP_DFT))
     x *= .9 / np.max(np.abs(x))
     y *= .9 / np.max(np.abs(y))
 
@@ -144,10 +143,9 @@ class MyFrame(wx.Frame):
     X, Y = np.fft.fft(x), np.fft.fft(y)
     XA = np.sqrt(X.real ** 2 + X.imag ** 2)
     YA = np.sqrt(Y.real ** 2 + Y.imag ** 2)
-    if not usefft:
-      save_dft(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_DFT)), F, X, Y)
     # print u'len t: %d, x: %d, y: %d, F: %d, X: %d, Y: %d, XA: %d, YA: %d' % (
     #   len(t), len(x), len(y), len(F), len(X), len(Y), len(XA), len(YA))
+    if not usefft: save_dft(fname(APP_DFT), F, X, Y)
 
     def drawY(self):
       self.figure.set_facecolor(DEF_BGCOLOR_R[0])
