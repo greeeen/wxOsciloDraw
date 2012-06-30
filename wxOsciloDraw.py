@@ -61,18 +61,14 @@ def load_turtle(fname):
     qa, qx, qy = getnextpoint(p, qa, qx, qy)
     x.append(qx), y.append(qy)
   x.append(x[0]), y.append(y[0])
-  at, ax, ay = np.array(t, float), np.array(x, int), np.array(y, int)
-  return at, ax * .9 / np.max(np.abs(ax)), ay * .9 / np.max(np.abs(ay))
+  return np.array(t, float), np.array(x, int), np.array(y, int)
 
 def load_dft(fname):
-  if False: # test return preset value
-    t = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK)
+  t, x, y, o = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK), [], [], []
+  if True: # False: # test return preset value
     x = reduce(lambda a, b: a + np.sin(b*t)/b, xrange(1, 65), 0.0)
     y = reduce(lambda a, b: a + np.cos(b*t), xrange(1, 65), 0.0)
-    x *= .9 / np.max(np.abs(x))
-    y *= .9 / np.max(np.abs(y))
     return t, x, y
-  t, x, y, o = [], [], [], []
   if not os.path.exists(fname):
     wx.MessageBox(u'file is not found: %s' % fname, APP_TITLE, wx.OK)
   else:
@@ -89,13 +85,10 @@ def load_dft(fname):
       wx.MessageBox(u'bad data in [%s] line %d' % (fname, c), APP_TITLE, wx.OK)
     finally:
       if ifp: ifp.close()
-  t = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK)
   x = reduce(lambda a, b: \
     a + o[b][1] * np.cos(b * t) + o[b][2] * np.sin(b * t), xrange(len(o)), 0.0)
   y = reduce(lambda a, b: \
     a + o[b][3] * np.cos(b * t) + o[b][4] * np.sin(b * t), xrange(len(o)), 0.0)
-  x *= .9 / np.max(np.abs(x))
-  y *= .9 / np.max(np.abs(y))
   return t, x, y
 
 def save_dft(fname, F, X, Y):
@@ -123,12 +116,15 @@ class MyFrame(wx.Frame):
     usefft = True # False # True
     if not usefft:
       t, x, y = load_turtle(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_EXT)))
-      if DEF_T_TICK < 1.0:
+      if DEF_T_TICK < 1.0: # re-sampling by enhanced scale
         et = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK) # enhanced scale
         x, y = np.interp(et, t, x), np.interp(et, t, y)
         t = et # set new scale after np.interp()
     else:
       t, x, y = load_dft(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_DFT)))
+    x *= .9 / np.max(np.abs(x))
+    y *= .9 / np.max(np.abs(y))
+
     N = len(t) # number of samples
     f = N # frequency (now N / 1)
     F = np.fft.fftfreq(N, 1.0 / f) # (tick = t[1] - t[0])
