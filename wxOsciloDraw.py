@@ -12,6 +12,7 @@ from matplotPanel import matplotPanel
 import numpy as np
 
 APP_TITLE = u'wxOsciloDraw'
+APP_DATA = u'data'
 APP_FILE = u'testdata'
 APP_EXT = u'turtle'
 APP_DFT = u'dft'
@@ -27,6 +28,9 @@ DEF_YWIDTH, DEF_Y_MIN, DEF_Y_MAX = 200, -2.0, 2.0
 DEF_BGCOLOR_R = ((1.0, 0.7, 0.7), wx.Color(255, 100, 100))
 DEF_BGCOLOR_G = ((0.7, 1.0, 0.7), wx.Color(100, 255, 100))
 DEF_BGCOLOR_B = ((0.7, 0.7, 1.0), wx.Color(100, 100, 255))
+
+def fname(ext):
+  return os.path.abspath(u'./%s/%s.%s' % (APP_DATA, APP_FILE, ext))
 
 def loaddata(fname):
   orbit = []
@@ -124,13 +128,13 @@ class MyFrame(wx.Frame):
     x_min, x_max, y_min, y_max = DEF_X_MIN, DEF_X_MAX, DEF_Y_MIN, DEF_Y_MAX
     usefft = True # False # True
     if not usefft:
-      t, x, y = load_turtle(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_EXT)))
+      t, x, y = load_turtle(fname(APP_EXT))
       if DEF_T_TICK < 1.0: # re-sampling by enhanced scale
         et = np.arange(DEF_T_MIN, DEF_T_MAX, DEF_T_TICK) # enhanced scale
         x, y = np.interp(et, t, x), np.interp(et, t, y)
         t = et # set new scale after np.interp()
     else:
-      t, x, y = load_dft(os.path.abspath(u'./%s.%s' % (APP_FILE, APP_DFT)))
+      t, x, y = load_dft(fname(APP_DFT))
     x *= .9 / np.max(np.abs(x))
     y *= .9 / np.max(np.abs(y))
 
