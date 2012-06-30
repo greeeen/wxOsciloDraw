@@ -18,3 +18,8 @@ python and well known modules:
 to make original image:
 
   * wxTurtle http://greeeen.github.com/wxTurtle/
+
+Thanks
+------
+The "Hatsune Miku's negi up down data" is wave audio captured
+from http://www.nicovideo.jp/sm5277506/ , many thanks.
