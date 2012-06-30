@@ -22,4 +22,4 @@ to make original image:
 Thanks
 ------
 The "Hatsune Miku's negi up down data" is wave audio captured
-from http://www.nicovideo.jp/sm5277506/ , many thanks.
+from http://www.nicovideo.jp/watch/sm5277506/ , so many thanks.
