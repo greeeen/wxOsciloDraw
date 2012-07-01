@@ -134,8 +134,13 @@ class MyFrame(wx.Frame):
     usefft = True # False # True
     if not usefft: t, x, y = load_turtle(fname(APP_EXT))
     else: t, x, y = load_dft(fname(APP_DFT))
-    x *= .9 / np.max(np.abs(x))
-    y *= .9 / np.max(np.abs(y))
+    keepaspect = False # True
+    if keepaspect: # 縦横比固定 (1000.0 は現在は適当な数字)
+      x /= 1000.0
+      y /= 1000.0
+    else: # 縦横比可変
+      x *= .9 / np.max(np.abs(x))
+      y *= .9 / np.max(np.abs(y))
 
     N = len(t) # number of samples
     f = N # frequency (now N / 1)
