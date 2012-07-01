@@ -135,9 +135,10 @@ class MyFrame(wx.Frame):
     if not usefft: t, x, y = load_turtle(fname(APP_EXT))
     else: t, x, y = load_dft(fname(APP_DFT))
     keepaspect = False # True
-    if keepaspect: # 縦横比固定 (1000.0 は現在は適当な数字)
-      x /= 1000.0
-      y /= 1000.0
+    if keepaspect: # 縦横比固定
+      a = np.max(np.max(np.abs(x)), np.max(np.abs(y)))
+      x *= .9 / a
+      y *= .9 / a
     else: # 縦横比可変
       x *= .9 / np.max(np.abs(x))
       y *= .9 / np.max(np.abs(y))
