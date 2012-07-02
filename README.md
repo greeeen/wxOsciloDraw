@@ -19,6 +19,10 @@ to make original image:
 
   * wxTurtle http://greeeen.github.com/wxTurtle/
 
+Relations
+---------
+  * wxLissajous http://greeeen.github.com/wxLissajous/
+
 Thanks
 ------
 The "Hatsune Miku's negi up down data" is wave audio captured
