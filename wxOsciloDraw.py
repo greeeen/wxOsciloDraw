@@ -175,7 +175,7 @@ class MyFrame(wx.Frame):
       self.figure.set_facecolor(DEF_BGCOLOR_G[0])
       self.canvas.SetBackgroundColour(DEF_BGCOLOR_G[1])
       plt = self.figure.add_subplot(111)
-      plt.plot(x, y)
+      plt.plot(x, y, 'g')
       plt.set_xlabel('x')
       plt.set_ylabel('y')
       if not autoscale: plt.axis([x_min, x_max, y_min, y_max])
